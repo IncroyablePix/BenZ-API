@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 set -e
 php /var/www/mysite/vendor/bin/doctrine-migrations diff
 php /var/www/mysite/vendor/bin/doctrine-migrations migrate --no-interaction --write-sql
