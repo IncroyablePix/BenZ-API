@@ -1,9 +1,9 @@
 FROM php:8.1-fpm
 
 RUN apt-get update -y \
-    && apt-get install -y nginx
+    && apt-get install -y nginx \
+    && apt-get install git -y
 
-# PHP_CPPFLAGS are used by the docker-php-ext-* scripts
 ENV PHP_CPPFLAGS="$PHP_CPPFLAGS -std=c++11"
 
 RUN apt-get install -y libpq-dev \
@@ -15,6 +15,12 @@ RUN apt-get install -y libpq-dev \
     && docker-php-ext-install intl \
     && apt-get remove libicu-dev icu-devtools -y
 
+# Composer installation
+WORKDIR /home
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+RUN php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+
+# PHP configuration
 RUN { \
         echo 'opcache.memory_consumption=128'; \
         echo 'opcache.interned_strings_buffer=8'; \
@@ -24,8 +30,15 @@ RUN { \
         echo 'opcache.enable_cli=1'; \
     } > /usr/local/etc/php/conf.d/php-opocache-cfg.ini
 
+# nginx configuration
 COPY ./config/default.conf /etc/nginx/sites-enabled/default
+
+# Entrypoint script
 COPY ./config/entrypoint.sh /etc/entrypoint.sh
+WORKDIR /etc
+
+# RUN tr -d '\015' < entrypoint.sh > entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 COPY --chown=www-data:www-data app/src /var/www/mysite
 
@@ -35,4 +48,5 @@ RUN mkdir -p /var/benz/components/migrations
 EXPOSE 80
 
 WORKDIR /var/www/mysite
-ENTRYPOINT ["/etc/entrypoint.sh"]
+RUN composer install --no-dev --optimize-autoloader
+ENTRYPOINT ["/bin/sh", "-c", "/etc/entrypoint.sh"]

