@@ -16,7 +16,7 @@ use Doctrine\ORM\Mapping\MappedSuperclass;
 use Doctrine\ORM\Mapping\Table;
 use Doctrine\ORM\Mapping\InheritanceType;
 use Doctrine\ORM\Mapping\DiscriminatorColumn;
-use Doctrine\ORM\Mapping\ManyToMany;
+use Doctrine\ORM\Mapping\ManyToOne;
 
 enum BuildState: string
 {
@@ -67,7 +67,8 @@ class Executable
 
     /**
      * @var Ransom $ransom
-     * @ManyToMany(targetEntity="Ransom", mappedBy="executables")
+     * @ManyToOne(targetEntity="Ransom", inversedBy="executables")
+     * @JoinColumn(name="ransom_id", referencedColumnName="id")
      */
     private Ransom $ransom;
 

@@ -18,7 +18,7 @@ class PlatformController extends Controller
 
         $this->service = $cipher_service;
 
-        $this->add_endpoint("GET", "architectures", [$this, "get_all_ciphers"]);
+        $this->add_endpoint("GET", "architectures", [$this, "get_all_architectures"]);
         $this->add_endpoint("GET", "systems", [$this, "get_all_systems"]);
     }
 

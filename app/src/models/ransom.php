@@ -5,6 +5,7 @@ namespace SmallPHP\Models;
 require_once __DIR__ . "/../utils/guid.php";
 require_once __DIR__ . "/executable/executable.php";
 
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\JoinColumn;
@@ -13,6 +14,7 @@ use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\MappedSuperclass;
 use Doctrine\ORM\Mapping\Table;
+use Doctrine\ORM\Mapping\OneToMany;
 
 use function SmallPHP\GUID\create_guid;
 
@@ -94,9 +96,10 @@ class Ransom
 
     /**
      * @var array $executables
-     * @ManyToMany(targetEntity="Executable", inversedBy="", cascade={"delete"})
+     * @OneToMany(targetEntity="Executable", mappedBy="ransom", cascade={"remove"})
+     * @JoinColumn(name="executables", referencedColumnName="ransom_id")
      */
-    private array $executables;
+    private Collection $executables;
 
     public function __construct(CryptoAddress $crypto_account, Cipher $cipher)
     {
@@ -118,7 +121,8 @@ class Ransom
 
     public function get_executables(): array
     {
-        return $this->executables;
+        // PersistentCollection to array
+        return $this->executables->toArray();
     }
 
     public function set_active(bool $active)

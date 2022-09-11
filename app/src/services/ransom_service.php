@@ -9,6 +9,7 @@ require_once __DIR__ . "/../models/ransom.php";
 require_once __DIR__ . "/../models/executable/architecture_type.php";
 require_once __DIR__ . "/../models/executable/system_type.php";
 require_once __DIR__ . "/../models/executable/executable.php";
+require_once __DIR__ . "/../models/business_exceptions/resource_not_found_exception.php";
 
 use Doctrine\ORM\EntityManager;
 use SmallPHP\Models\ArchitectureType;
@@ -19,6 +20,7 @@ use SmallPHP\Models\Executable;
 use SmallPHP\Models\Ransom;
 use SmallPHP\Models\SystemType;
 use SmallPHP\Models\XORCipher;
+use SmallPHP\Models\ResourceNotFoundException;
 
 class RansomService
 {
@@ -73,15 +75,16 @@ class RansomService
         return $encrypted;
     }
 
-    public function get_executables(string $id): ?array
+    public function get_executables(string $id): array
     {
         $ransom = $this->entity_manager->find(Ransom::class, $id);
+
         if($ransom === null)
         {
-            return null;
+            return [];
         }
 
-        return array_map(function ($exe) { return $exe->to_full_array(); }, $ransom->get_executables());
+        return array_map(function ($exe) { return $exe->to_array(); }, $ransom->get_executables());
     }
 
     public function create_executable(string $id, string $system, string $architecture): void
@@ -92,7 +95,7 @@ class RansomService
 
         if($ransom === null)
         {
-            throw new \Exception("Ransom not found");
+            throw new ResourceNotFoundException("Ransom not found", 0, null);
         }
 
         $executable = new Executable($ransom, $architecture_type, $system_type);

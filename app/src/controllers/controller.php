@@ -9,6 +9,7 @@ abstract class RouteElement
 {
     public abstract function get_name(): string;
     public abstract function matches(string $element): bool;
+    public abstract function get_match_score(): int;
 }
 
 class StaticRouteElement extends RouteElement
@@ -28,6 +29,11 @@ class StaticRouteElement extends RouteElement
     public function get_name(): string
     {
         return $this->name;
+    }
+
+    public function get_match_score(): int
+    {
+        return 2;
     }
 }
 
@@ -55,6 +61,11 @@ class ParameterRouteElement extends RouteElement
     public function get_name(): string
     {
         return $this->name;
+    }
+
+    public function get_match_score(): int
+    {
+        return 1;
     }
 }
 
@@ -89,9 +100,9 @@ class Route
         }
     }
 
-    public function try_route(array $parts, HttpResponse $response): bool
+    public function try_route(array $parts): int
     {
-        $query_params = [];
+        $match_score = 0;
 
         if(count($parts) !== count($this->parts))
             return false;
@@ -101,16 +112,28 @@ class Route
             $route_element = $this->parts[$i];
             if(!$route_element->matches($parts[$i]))
             {
-                return false;
+                $match_score = 0;
+                break;
             }
             else
             {
-                $query_params[$route_element->get_name()] = $parts[$i];
+                $match_score += $route_element->get_match_score();
             }
         }
 
+        return $match_score;
+    }
+
+    public function execute(array $parts, HttpResponse $response): void
+    {
+        $query_params = [];
+
+        for($i = 0; $i < count($parts); $i ++)
+        {
+            $route_element = $this->parts[$i];
+            $query_params[$route_element->get_name()] = $parts[$i];
+        }
         call_user_func($this->callback, $query_params, $response);
-        return true;
     }
 }
 
@@ -137,7 +160,8 @@ abstract class Controller
             "POST" => [],
             "GET" => [],
             "PUT" => [],
-            "DELETE" => []
+            "DELETE" => [],
+            "PATCH" => [],
         ];
     }
 
@@ -164,13 +188,42 @@ abstract class Controller
         $response = new HttpResponse();
         $parse_endpoints = $this->endpoints[$this->method];
 
+        $filtered_endpoints = array_filter($parse_endpoints, function ($endpoint)
+        {
+            return $endpoint->try_route($this->endpoint) > 0;
+        });
+
+        $endpoint = array_reduce($filtered_endpoints, function ($carry, $item)
+        {
+            $score = $item->try_route($this->endpoint);
+            if($score > $carry["score"])
+            {
+                $carry["score"] = $score;
+                $carry["endpoint"] = $item;
+            }
+
+            return $carry;
+        }, ["score" => 0, "endpoint" => null]);
+
+        if($endpoint["endpoint"] !== null)
+        {
+            $endpoint["endpoint"]->execute($this->endpoint, $response);
+        }
+        // filter endpoints
+
+        /*foreach($parse_endpoints as $endpoint)
+        {
+
+        }
+
         foreach($parse_endpoints as $ep)
         {
             if($ep->try_route($this->endpoint, $response))
             {
+                $ep->execute($this->endpoint, $response);
                 break;
             }
-        }
+        }*/
 
         return $response;
     }

