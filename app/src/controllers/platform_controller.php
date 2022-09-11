@@ -3,33 +3,41 @@
 namespace SmallPHP\Controller;
 
 require_once __DIR__ . "/controller.php";
-require_once __DIR__ . "/../services/cipher_service.php";
+require_once __DIR__ . "/../services/platform_service.php";
 
 use SmallPHP\CurrentJwt\TokenData;
-use SmallPHP\Services\CipherService;
+use SmallPHP\Services\PlatformService;
 
-class CipherController extends Controller
+class PlatformController extends Controller
 {
-    private CipherService $service;
+    private PlatformService $service;
 
-    public function __construct(array $endpoint, ?TokenData $token_data, string $method, CipherService $cipher_service)
+    public function __construct(array $endpoint, ?TokenData $token_data, string $method, PlatformService $cipher_service)
     {
         parent::__construct($endpoint, $token_data, $method);
 
         $this->service = $cipher_service;
 
-        $this->add_endpoint("GET", "list", [$this, "get_all_ciphers"]);
+        $this->add_endpoint("GET", "architectures", [$this, "get_all_ciphers"]);
+        $this->add_endpoint("GET", "systems", [$this, "get_all_systems"]);
     }
 
-    public function get_all_ciphers(array $query_params, HttpResponse $response): void
+    public function get_all_architectures(array $query_params, HttpResponse $response): void
     {
         $response->headers["Content-Type"] = "application/json";
         $response->status_code = 200;
-        $response->body = json_encode($this->service->get_all_ciphers());
+        $response->body = json_encode($this->service->get_all_architectures());
+    }
+
+    public function get_all_systems(array $query_params, HttpResponse $response): void
+    {
+        $response->headers["Content-Type"] = "application/json";
+        $response->status_code = 200;
+        $response->body = json_encode($this->service->get_all_systems());
     }
 
     public function get_name(): string
     {
-        return "ciphers";
+        return "platforms";
     }
 }

@@ -3,18 +3,22 @@ require_once __DIR__ . "/bootstrap.php";
 require_once __DIR__ . "/controllers/ransom_controller.php";
 require_once __DIR__ . "/controllers/cipher_controller.php";
 require_once __DIR__ . "/controllers/crypto_controller.php";
+require_once __DIR__ . "/controllers/platform_controller.php";
 require_once __DIR__ . "/services/ransom_service.php";
 require_once __DIR__ . "/services/cipher_service.php";
 require_once __DIR__ . "/services/crypto_service.php";
+require_once __DIR__ . "/services/platform_service.php";
 require_once __DIR__ . "/utils/cors.php";
 require_once __DIR__ . "/utils/headers.php";
 require_once __DIR__ . "/utils/jwt.php";
 
 use SmallPHP\Controller\CipherController;
 use SmallPHP\Controller\CryptoController;
+use SmallPHP\Controller\PlatformController;
 use SmallPHP\Controller\RansomController;
 use SmallPHP\Services\CipherService;
 use SmallPHP\Services\CryptoService;
+use SmallPHP\Services\PlatformService;
 use SmallPHP\Services\RansomService;
 use function SmallPHP\Cors\use_cors;
 use function SmallPHP\CurrentJwt\extract_token_data;
@@ -59,7 +63,8 @@ catch(InvalidTokenException $e)
 $controllers = [
     new RansomController($request, $token_val, $method, new RansomService($entityManager)),
     new CipherController($request, $token_val, $method, new CipherService()),
-    new CryptoController($request, $token_val, $method, new CryptoService())
+    new CryptoController($request, $token_val, $method, new CryptoService()),
+    new PlatformController($request, $token_val, $method, new PlatformService()),
 ];
 
 $controller = null;

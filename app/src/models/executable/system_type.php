@@ -2,15 +2,18 @@
 
 namespace SmallPHP\Models;
 
-enum ArchitectureType: int
+enum SystemType: int
 {
-    case PLATFORM_TYPE_AMD64 = 1;
+    case SYSTEM_TYPE_WINDOWS_GUI = 1;
+    // case SYSTEM_TYPE_WINDOWS_CLI = 2;
+    // case SYSTEM_TYPE_LINUX_CLI = 3;
+    // case SYSTEM_TYPE_APPLE = 5;
 
-    public static function from_string(string $label): ?ArchitectureType
+    public static function from_string(string $label): ?SystemType
     {
         return match (strtoupper($label))
         {
-            "AMD64" => ArchitectureType::PLATFORM_TYPE_AMD64,
+            "WINDOWS GUI" => SystemType::SYSTEM_TYPE_WINDOWS_GUI,
             default => null,
         };
     }
@@ -19,7 +22,7 @@ enum ArchitectureType: int
     {
         return match ($this)
         {
-            ArchitectureType::PLATFORM_TYPE_AMD64 => "AMD64",
+            SystemType::SYSTEM_TYPE_WINDOWS_GUI => "WINDOWS GUI",
             default => "",
         };
     }

@@ -3,6 +3,7 @@
 namespace SmallPHP\Models;
 
 require_once __DIR__ . "/../utils/guid.php";
+require_once __DIR__ . "/executable/executable.php";
 
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\GeneratedValue;
@@ -91,6 +92,12 @@ class Ransom
      */
     private string $message;
 
+    /**
+     * @var array $executables
+     * @ManyToMany(targetEntity="Executable", inversedBy="", cascade={"delete"})
+     */
+    private array $executables;
+
     public function __construct(CryptoAddress $crypto_account, Cipher $cipher)
     {
         $this->cipher = $cipher;
@@ -102,6 +109,16 @@ class Ransom
         $this->extension = ".benz";
         $this->paid = false;
         $this->active = false;
+    }
+
+    public function add_executable(Executable $executable): void
+    {
+        $this->executables[] = $executable;
+    }
+
+    public function get_executables(): array
+    {
+        return $this->executables;
     }
 
     public function set_active(bool $active)
